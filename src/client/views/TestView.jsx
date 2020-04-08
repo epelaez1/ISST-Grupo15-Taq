@@ -1,32 +1,40 @@
 import React, { Component } from 'react';
-import { fetchGet } from '../util';
+import { connect } from 'react-redux';
 
-export default class TestView extends Component {
-	constructor() {
-		super();
-		this.state = {
-			pong: false,
-		};
+import { fetchGet } from '../util';
+import { receivePong } from '../redux/actions/pong';
+
+const doPing = function doPing(props) {
+	fetchGet('/api/v1/ping')
+		.then((r) => r.json())
+		.then((r) => console.log(r))
+		.then(() => props.dispatch(receivePong()));
+};
+
+class TestView extends Component {
+	componentDidMount() {
+		doPing(this.props);
 	}
 
-	componentDidMount() {
-		fetchGet('/api/v1/ping')
-			.then((r) => r.json())
-			.then((res) => {
-				this.setState({
-					pong: res.pong,
-				});
-			});
+	componentDidUpdate() {
+		doPing(this.props);
 	}
 
 	render() {
-		const { pong } = this.state;
-
+		const { ping } = this.props;
 		return (
 			<div>
 				<h1>Hello, world!</h1>
-				{!pong ? 'Awaiting pong...' : 'Pong!'}
+				{!ping ? 'Awaiting pong...' : 'Pong!'}
 			</div>
 		);
 	}
 }
+
+function mapStateToProps(state) {
+	return {
+		...state,
+	};
+}
+
+export default connect(mapStateToProps)(TestView);
