@@ -3,8 +3,8 @@ import { createStore } from 'redux';
 import React from 'react';
 import { BrowserRouter, Route, Switch } from 'react-router-dom';
 import GlobalState from './reducers';
-import TestView from '../views/TestView';
 import ErrorView from '../views/ErrorView';
+import App from '../App';
 
 // import { questions } from "../assets/mock-data";
 
@@ -34,13 +34,9 @@ export default class ReduxProvider extends React.Component {
 	render() {
 		return (
 			<Provider store={this.store}>
-				<BrowserRouter>
-					<Switch>
-						<Route exact path="/" component={TestView} />
-						<Route path="/500" render={(props) => <ErrorView {...props} code={500} />} />
-						<Route render={(props) => <ErrorView {...props} code={404} />} />
-					</Switch>
-				</BrowserRouter>
+				                <div style={{ height: '100%' }} >
+                    <App store={ this.store}/>
+                </div>
 			</Provider>
 		);
 	}
