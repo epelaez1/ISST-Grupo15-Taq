@@ -1,6 +1,6 @@
 import { combineReducers } from 'redux';
 
-function ping(state = false, action = {}) {
+function pong(state = false, action = {}) {
 	switch (action.type) {
 	case 'PONG':
 		return true;
@@ -11,8 +11,10 @@ function ping(state = false, action = {}) {
 
 function loggedUser(state = {}, action = {}) {
 	switch (action.type) {
+	case 'MAKE_ADMIN':
+		return { isAdmin: !state.isAdmin, name: 'E. Peláez' };
 	default:
-		return state;
+		return { isAdmin: false, name: 'E. Peláez' };
 	}
 }
 
@@ -39,6 +41,15 @@ function rentals(state = [], action = {}) {
 
 function locations(state = [], action = {}) {
 	switch (action.type) {
+	case 'UPDATE_LOCATION':
+		return state.map((location) => (
+			location.id === action.payload.location.id ? action.payload.location : location));
+	case 'SET_LOCATION':
+		return [...state, action.payload.location];
+	case 'SET_LOCATIONS':
+		return action.payload.locations;
+	case 'REMOVE_LOCATION':
+		return state.filter((location) => location.id !== action.payload.location.id);
 	default:
 		return state;
 	}
@@ -78,9 +89,40 @@ function paymentMethods(state = [], action = {}) {
 		return state;
 	}
 }
+function info(state = [], action = {}) {
+	const models = {
+		locations: {
+			id: 'id',
+			columns: [
+				{
+					field: 'id',
+					title: 'ID',
+					editable: 'never',
+					width: 1,
+				},
+				{
+					field: 'name',
+					title: 'Nombre',
+					width: 200,
+				},
+				{
+					field: 'description',
+					title: 'Descripción',
+				},
+			],
+			title: 'Localizaciones',
+		},
+	};
+	switch (action.type) {
+	case 'DELETE_INFO':
+		return state;
+	default:
+		return models;
+	}
+}
 
 const GlobalState = (combineReducers({
-	ping,
+	pong,
 	loggedUser,
 	lockers,
 	users,
@@ -91,6 +133,7 @@ const GlobalState = (combineReducers({
 	lockerStates,
 	rentalStates,
 	paymentMethods,
+	info,
 }));
 
 export default GlobalState;

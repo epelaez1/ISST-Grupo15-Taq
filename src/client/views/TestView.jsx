@@ -1,40 +1,24 @@
-import React, { Component } from 'react';
-import { connect } from 'react-redux';
+import React, { useEffect } from 'react';
+import { useSelector, useDispatch } from 'react-redux';
 
 import { fetchGet } from '../util';
 import { receivePong } from '../redux/actions/pong';
 
-const doPing = function doPing(props) {
-	fetchGet('/api/v1/ping')
-		.then((r) => r.json())
-		.then((r) => console.log(r))
-		.then(() => props.dispatch(receivePong()));
+
+const TestView = () => {
+	const pong = useSelector((state) => state.pong);
+	const dispatch = useDispatch();
+	useEffect(() => {
+		fetchGet('/api/v1/ping')
+			.then((r) => r.json())
+			.then(() => dispatch(receivePong()));
+	});
+	return (
+		<div>
+			<h1>Hello, world!</h1>
+			{!pong ? 'Awaiting pong...' : 'Pong!'}
+		</div>
+	);
 };
 
-class TestView extends Component {
-	componentDidMount() {
-		doPing(this.props);
-	}
-
-	componentDidUpdate() {
-		doPing(this.props);
-	}
-
-	render() {
-		const { ping } = this.props;
-		return (
-			<div>
-				<h1>Hello, world!</h1>
-				{!ping ? 'Awaiting pong...' : 'Pong!'}
-			</div>
-		);
-	}
-}
-
-function mapStateToProps(state) {
-	return {
-		...state,
-	};
-}
-
-export default connect(mapStateToProps)(TestView);
+export default TestView;

@@ -2,3 +2,20 @@ h1 {
     font-size: 72px;
     color: #F65555;
 }
+html, body, #root {
+	height: 100%;
+}
+
+#main {
+	display: flex;
+	flex-direction: column;
+}
+
+#main > div:nth-child(2) {
+	flex-grow: 1;
+}
+
+a {
+	text-decoration: none;
+	color: rgba(0, 0, 0, 0.87);
+}

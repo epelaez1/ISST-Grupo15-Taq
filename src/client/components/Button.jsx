@@ -1,6 +1,6 @@
 import React from 'react';
 
-export default class PageButton extends React.PureComponent {
+export default class ButtonExample extends React.PureComponent {
 	render() {
 		const {
 			extraClasses, value, action, text, tabIndex,
