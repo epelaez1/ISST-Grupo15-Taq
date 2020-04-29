@@ -1,7 +1,7 @@
 import React, { useEffect } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 
-import { fetchGet } from '../util';
+import { fetchGet } from '../utils/asyncRequests';
 import { receivePong } from '../redux/actions/pong';
 
 

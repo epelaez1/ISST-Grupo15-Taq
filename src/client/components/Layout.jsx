@@ -1,7 +1,7 @@
 import React from 'react';
 import CssBaseline from '@material-ui/core/CssBaseline';
 import { makeStyles } from '@material-ui/core/styles';
-import NavBar from './Navbar';
+import NavBar from './NavBar';
 import LeftMenu from './LeftMenu';
 
 const drawerWidth = 240;
@@ -60,7 +60,7 @@ function ResponsiveDrawer(props) {
 				mobileOpen={mobileOpen}
 				classes={classes}
 			/>
-			<main className={classes.content} id="main">
+			<main className={classes.content} id="main" style={{ overflow: 'auto' }}>
 				<div className={classes.toolbar} />
 				<div className="main_section">{children}</div>
 				{footer}

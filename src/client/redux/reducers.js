@@ -12,14 +12,23 @@ function pong(state = false, action = {}) {
 function loggedUser(state = {}, action = {}) {
 	switch (action.type) {
 	case 'MAKE_ADMIN':
-		return { isAdmin: !state.isAdmin, name: 'E. Peláez' };
+		return { ...state, isAdmin: !state.isAdmin };
 	default:
-		return { isAdmin: false, name: 'E. Peláez' };
+		return state;
 	}
 }
 
 function lockers(state = [], action = {}) {
 	switch (action.type) {
+	case 'UPDATE_LOCKER':
+		return state.map((locker) => (
+			locker.id === action.payload.locker.id ? action.payload.locker : locker));
+	case 'SET_LOCKER':
+		return [...state, action.payload.locker];
+	case 'SET_LOCKERS':
+		return action.payload.lockers;
+	case 'REMOVE_LOCKER':
+		return state.filter((locker) => locker.id !== action.payload.locker.id);
 	default:
 		return state;
 	}
@@ -84,40 +93,19 @@ function rentalStates(state = [], action = {}) {
 }
 
 function paymentMethods(state = [], action = {}) {
+	const { payload } = action;
 	switch (action.type) {
+	case 'UPDATE_PAYMENT_METHOD':
+		return state.map((paymentMethod) => (
+			paymentMethod.id === payload.paymentMethod.id ? payload.paymentMethod : paymentMethod));
+	case 'SET_PAYMENT_METHOD':
+		return [...state, payload.paymentMethod];
+	case 'SET_PAYMENT_METHODS':
+		return payload.paymentMethods;
+	case 'REMOVE_PAYMENT_METHOD':
+		return state.filter((paymentMethod) => paymentMethod.id !== payload.paymentMethod.id);
 	default:
 		return state;
-	}
-}
-function info(state = [], action = {}) {
-	const models = {
-		locations: {
-			id: 'id',
-			columns: [
-				{
-					field: 'id',
-					title: 'ID',
-					editable: 'never',
-					width: 1,
-				},
-				{
-					field: 'name',
-					title: 'Nombre',
-					width: 200,
-				},
-				{
-					field: 'description',
-					title: 'Descripción',
-				},
-			],
-			title: 'Localizaciones',
-		},
-	};
-	switch (action.type) {
-	case 'DELETE_INFO':
-		return state;
-	default:
-		return models;
 	}
 }
 
@@ -133,7 +121,6 @@ const GlobalState = (combineReducers({
 	lockerStates,
 	rentalStates,
 	paymentMethods,
-	info,
 }));
 
 export default GlobalState;

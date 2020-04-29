@@ -1,11 +1,12 @@
 import { Provider } from 'react-redux';
-import { createStore } from 'redux';
 import React from 'react';
 import { BrowserRouter, Route, Switch } from 'react-router-dom';
 import { createMuiTheme, ThemeProvider } from '@material-ui/core/styles';
-import GlobalState from './reducers';
+import store from './store';
 import TestView from '../views/TestView';
 import Locations from '../views/Locations';
+import Payments from '../views/Payments';
+import Lockers from '../views/Lockers';
 import ErrorView from '../views/ErrorView';
 import Layout from '../components/Layout';
 import SignIn from '../components/SignIn';
@@ -15,24 +16,7 @@ import SignIn from '../components/SignIn';
 export default class ReduxProvider extends React.Component {
 	constructor(props) {
 		super(props);
-		this.initialState = {
-			pong: false,
-			loggedUser: {},
-			lockers: [],
-			users: [],
-			rentals: [],
-			locations: [],
-			payments: [],
-			payment: [],
-			lockerStates: [],
-			rentalStates: [],
-			paymentMethods: [],
-		};
-		this.store = this.configureStore();
-	}
-
-	configureStore() {
-		return createStore(GlobalState, this.initialState);
+		this.store = store;
 	}
 
 	render() {
@@ -64,6 +48,8 @@ export default class ReduxProvider extends React.Component {
 								<Route exact path="/" component={TestView} />
 								<Route exact path="/signin" component={SignIn} />
 								<Route exact path="/admin/locations" component={Locations} />
+								<Route exact path="/admin/payments" component={Payments} />
+								<Route exact path="/admin/lockers" component={Lockers} />
 								<Route path="/500" render={(props) => <ErrorView {...props} code={500} />} />
 								<Route render={(props) => <ErrorView {...props} code={404} />} />
 							</Switch>

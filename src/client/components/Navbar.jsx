@@ -17,7 +17,8 @@ import SupervisorAccountIcon from '@material-ui/icons/SupervisorAccount';
 import Divider from '@material-ui/core/Divider';
 import Fade from '@material-ui/core/Fade';
 import { useSelector, useDispatch } from 'react-redux';
-import { makeAdmin } from '../redux/actions/users'
+import { makeAdmin } from '../redux/actions/users';
+
 export default function MenuAppBar(props) {
 	const {
 		handleDrawerToggle, classes,
@@ -27,7 +28,7 @@ export default function MenuAppBar(props) {
 	const open = Boolean(anchorEl);
 	const loggedUser = useSelector((state) => state.loggedUser);
 	const auth = loggedUser.isAdmin;
-	const handleChange = (event) => {
+	const handleChange = () => {
 		dispatch(makeAdmin());
 	};
 

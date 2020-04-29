@@ -1,3 +1,3 @@
-export function makeAdmin(location) {
+export function makeAdmin() {
 	return { type: 'MAKE_ADMIN', payload: {} };
 }
