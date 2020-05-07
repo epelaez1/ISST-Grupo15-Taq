@@ -1,5 +1,6 @@
 package es.upm.dit.isst.taq.servlets;
 
+import java.io.BufferedReader;
 import java.io.IOException;
 import java.sql.Date;
 import java.util.List;
@@ -10,6 +11,8 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import org.json.JSONException;
+import org.json.JSONObject;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 
@@ -18,7 +21,7 @@ import es.upm.dit.isst.taq.model.Events;
 /**
  * Servlet implementation class Form2Profesor
  */
-@WebServlet({"/api/v1/event/*", "/api/v1/events"})
+@WebServlet({"/api/v1/admin/event/*", "/api/v1/admin/events"})
 public class EventsServlet extends HttpServlet {
 	private static final long serialVersionUID = 1L;
        
@@ -73,12 +76,28 @@ public class EventsServlet extends HttpServlet {
 	 */
 	protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
 		
-		String param1 = req.getParameter("description");
-		String param2 = req.getParameter("eventTypeId");
-		String param3 = req.getParameter("userId");
-		String param4 = req.getParameter("lockerId");
-		String param5 = req.getParameter("paymentId");
-		String param6 = req.getParameter("rentalId");
+		JSONObject jsonObject;
+		StringBuffer jb = new StringBuffer();
+		String line = null;
+		try {
+		    BufferedReader reader = req.getReader();
+		    while ((line = reader.readLine()) != null)
+		      jb.append(line);
+		  } catch (Exception e) { /*report an error*/ }
+
+		  try {
+		   jsonObject =  new JSONObject(jb.toString());
+		  } catch (JSONException e) {
+		    // crash and burn
+		    throw new IOException("Error parsing JSON request string");
+		  }
+		  
+		String param1 = jsonObject.getString("description");
+		Integer param2 = jsonObject.getInt("eventTypeId");
+		Integer param3 = jsonObject.getInt("userId");
+		Integer param4 = jsonObject.getInt("lockerId");
+		Integer param5 = jsonObject.getInt("paymentId");
+		Integer param6 = jsonObject.getInt("rentalId");
 		
 		String param = req.getPathInfo();
     	
@@ -87,21 +106,14 @@ public class EventsServlet extends HttpServlet {
     		return;
     	}
     	
-		if (param1 == "" || param1 == null || param2 == "" || param2 == null || param3 == "" || param3 == null) {
+		if (param1 == null || param2 == null || param3 == null) {
 			resp.setStatus(HttpServletResponse.SC_BAD_REQUEST);
 			return;
 		}
-		if (param4 == "" || param4 == null || param5 == "" || param5 == null || param6 == "" || param6 == null) {
+		if (param4 == null || param5 == null || param6 == null) {
 			resp.setStatus(HttpServletResponse.SC_BAD_REQUEST);
 			return;
 		}
-		
-		//Integer p1 = Integer.parseInt(param1);
-		Integer p2 = Integer.parseInt(param2);
-		Integer p3 = Integer.parseInt(param3);
-		Integer p4 = Integer.parseInt(param4);
-		Integer p5 = Integer.parseInt(param5);
-		Integer p6 = Integer.parseInt(param6);
 		
 		Events item = new Events();
 		long millis = System.currentTimeMillis();  
@@ -115,11 +127,11 @@ public class EventsServlet extends HttpServlet {
         
         item.setId(id);
 		item.setDescription(param1);
-		item.setEventTypeId(p2);
-		item.setUserId(p3);
-		item.setLockerId(p4);
-		item.setPaymentId(p5);
-		item.setRentalId(p6);
+		item.setEventTypeId(param2);
+		item.setUserId(param3);
+		item.setLockerId(param4);
+		item.setPaymentId(param5);
+		item.setRentalId(param6);
 		item.setCreatedAt(date);
 		item.setUpdatedAt(date);
 		
@@ -131,7 +143,6 @@ public class EventsServlet extends HttpServlet {
 	}
 	
 	protected void doDelete(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
-	
 		int id;
 		Events item = null;
 		String param = req.getPathInfo();
@@ -150,7 +161,8 @@ public class EventsServlet extends HttpServlet {
     		return;
 		}
 		EventsDAOImpl.getInstance().delete(item);
-		
+		resp.setContentType("application/json");
+		resp.getWriter().print("[]");
 	}
 	
 	protected void doPut(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
@@ -172,13 +184,28 @@ public class EventsServlet extends HttpServlet {
 			resp.setStatus(HttpServletResponse.SC_NOT_FOUND);
     		return;
 		}
-		
-		String param1 = req.getParameter("description");
-		String param2 = req.getParameter("eventTypeId");
-		String param3 = req.getParameter("userId");
-		String param4 = req.getParameter("lockerId");
-		String param5 = req.getParameter("paymentId");
-		String param6 = req.getParameter("rentalId");
+		JSONObject jsonObject;
+		StringBuffer jb = new StringBuffer();
+		String line = null;
+		try {
+		    BufferedReader reader = req.getReader();
+		    while ((line = reader.readLine()) != null)
+		      jb.append(line);
+		  } catch (Exception e) { /*report an error*/ }
+
+		  try {
+		   jsonObject =  new JSONObject(jb.toString());
+		  } catch (JSONException e) {
+		    // crash and burn
+		    throw new IOException("Error parsing JSON request string");
+		  }
+		  
+		String param1 = jsonObject.getString("description");
+		Integer param2 = jsonObject.getInt("eventTypeId");
+		Integer param3 = jsonObject.getInt("userId");
+		Integer param4 = jsonObject.getInt("lockerId");
+		Integer param5 = jsonObject.getInt("paymentId");
+		Integer param6 = jsonObject.getInt("rentalId");
 		
 		
 		long millis = System.currentTimeMillis();
@@ -189,29 +216,24 @@ public class EventsServlet extends HttpServlet {
         	item.setDescription(param1);
         }
         
-        if(param2 != "" || param2 != null) {
-    		Integer p2 = Integer.parseInt(param2);
-        	item.setEventTypeId(p2);
+        if(param2 != null) {
+        	item.setEventTypeId(param2);
         }
         
-        if(param3 != "" || param3 != null) {
-    		Integer p3 = Integer.parseInt(param3);
-        	item.setUserId(p3);
+        if(param3 != null) {
+        	item.setUserId(param3);
         }
 
-        if(param4 != "" || param4 != null) {
-    		Integer p4 = Integer.parseInt(param4);
-        	item.setLockerId(p4);
+        if(param4 != null) {
+        	item.setLockerId(param4);
         }
         
-        if(param5 != "" || param5 != null) {
-    		Integer p5 = Integer.parseInt(param5);
-        	item.setPaymentId(p5);
+        if(param5 != null) {
+        	item.setPaymentId(param5);
         }
         
-        if(param6 != "" || param6 != null) {
-    		Integer p6 = Integer.parseInt(param6);
-        	item.setRentalId(p6);
+        if(param6 != null) {
+        	item.setRentalId(param6);
         }
 
 		item.setUpdatedAt(date);

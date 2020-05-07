@@ -64,7 +64,7 @@ public class UsersDAOImpl implements UsersDAO{
 	public List<Users> readAll() {
 		Session session = SessionFactoryService.get().openSession();
 		session.beginTransaction();
-		List<Users> lista = session.createQuery("from Rentals").list();
+		List<Users> lista = session.createQuery("from Users").list();
 		session.getTransaction().commit();
 		session.close();
 		return lista;

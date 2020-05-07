@@ -3,6 +3,8 @@ package es.upm.dit.isst.taq.servlets;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.sql.Date;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
 import java.util.List;
 
 import javax.servlet.ServletException;
@@ -11,7 +13,6 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-import org.json.HTTP;
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -44,8 +45,10 @@ public class LocationsServlet extends HttpServlet {
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws IOException {
     	resp.addHeader("Access-Control-Allow-Origin", "http://localhost:8080");
     	resp.setContentType("application/json");
+		DateFormat df = new SimpleDateFormat("dd/MM/yyyy HH:mm:ss");
+
     	ObjectMapper mapper = new ObjectMapper();
-    	
+		mapper.setDateFormat(df);
     	if(req.getRequestURI().contains("locations")) {
     		List<Locations> list = LocationsDAOImpl.getInstance().readAll();
     		if (list.isEmpty()) {
@@ -110,6 +113,8 @@ public class LocationsServlet extends HttpServlet {
 		item.setUpdatedAt(date);
 		LocationsDAOImpl.getInstance().create(item);
 		ObjectMapper mapper = new ObjectMapper();
+		DateFormat df = new SimpleDateFormat("dd/MM/yyyy HH:mm:ss");
+		mapper.setDateFormat(df);
 		String jsonString = mapper.writeValueAsString(item);
 		resp.getWriter().print(jsonString);
 	}
@@ -179,17 +184,19 @@ public class LocationsServlet extends HttpServlet {
 		long millis = System.currentTimeMillis();
         Date date=new Date(millis);  
         
-        if(param1 != "" || param1 != null) {
+        if(param1 != "" && param1 != null) {
         	item.setName(param1);
         }
         
-        if(param2 != "" || param2 != null) {
+        if(param2 != "" && param2 != null) {
         	item.setDescription(param2);
         }
         
 		item.setUpdatedAt(date);
 		LocationsDAOImpl.getInstance().update(item);
 		ObjectMapper mapper = new ObjectMapper();
+		DateFormat df = new SimpleDateFormat("dd/MM/yyyy HH:mm:ss");
+		mapper.setDateFormat(df);
 		String jsonString = mapper.writeValueAsString(item);
 		resp.getWriter().print(jsonString);
 	}

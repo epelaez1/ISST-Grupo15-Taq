@@ -1,7 +1,10 @@
 package es.upm.dit.isst.taq.servlets;
 
+import java.io.BufferedReader;
 import java.io.IOException;
 import java.sql.Date;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
 import java.util.List;
 
 import javax.servlet.ServletException;
@@ -10,15 +13,21 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import org.json.JSONException;
+import org.json.JSONObject;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 
+import es.upm.dit.isst.taq.dao.LockersDAOImpl;
 import es.upm.dit.isst.taq.dao.PaymentsDAOImpl;
+import es.upm.dit.isst.taq.dao.RentalsDAOImpl;
+import es.upm.dit.isst.taq.model.Lockers;
 import es.upm.dit.isst.taq.model.Payments;
+import es.upm.dit.isst.taq.model.Rentals;
 /**
  * Servlet implementation class Form2Profesor
  */
-@WebServlet({"/api/v1/payment/*", "/api/v1/payments"})
+@WebServlet({"/api/v1/admin/payments/*", "/api/v1/admin/payments", "/api/v1/payments/*"})
 public class PaymentsServlet extends HttpServlet {
 	private static final long serialVersionUID = 1L;
        
@@ -41,7 +50,9 @@ public class PaymentsServlet extends HttpServlet {
     	resp.addHeader("Access-Control-Allow-Origin", "http://localhost:8080");
     	resp.setContentType("application/json");
     	ObjectMapper mapper = new ObjectMapper();
-    	
+		DateFormat df = new SimpleDateFormat("dd/MM/yyyy HH:mm:ss");
+		mapper.setDateFormat(df);
+		
     	if(req.getRequestURI().contains("payments")) {
     		List<Payments> list = PaymentsDAOImpl.getInstance().readAll();
     		if (list.isEmpty()) {
@@ -73,32 +84,36 @@ public class PaymentsServlet extends HttpServlet {
 	 */
 	protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
 		
-		String param1 = req.getParameter("quantity");
-		String param2 = req.getParameter("userId");
-		String param3 = req.getParameter("rentalId");
-		String param4 = req.getParameter("paymentMethodId");
-		
-		String param = req.getPathInfo();
-    	
-    	if (param != null) {
-    		resp.setStatus(HttpServletResponse.SC_NOT_FOUND);
-    		return;
-    	}
-    	
-		if (param1 == "" || param1 == null || param2 == "" || param2 == null) {
-			resp.setStatus(HttpServletResponse.SC_BAD_REQUEST);
-			return;
-		}
-		if (param3 == "" || param3 == null || param4 == "" || param4 == null) {
-			resp.setStatus(HttpServletResponse.SC_BAD_REQUEST);
-			return;
-		}
-		
-		Double p1 = Double.parseDouble(param1);
-		Integer p2 = Integer.parseInt(param2);
-		Integer p3 = Integer.parseInt(param3);
-		Integer p4 = Integer.parseInt(param4);
+		JSONObject jsonObject;
+		StringBuffer jb = new StringBuffer();
+		String line = null;
+		try {
+		    BufferedReader reader = req.getReader();
+		    while ((line = reader.readLine()) != null)
+		      jb.append(line);
+		  } catch (Exception e) { /*report an error*/ }
 
+		  try {
+		   jsonObject =  new JSONObject(jb.toString());
+		  } catch (JSONException e) {
+		    // crash and burn
+		    throw new IOException("Error parsing JSON request string");
+		  }
+		  
+		Double param1 = jsonObject.getDouble("quantity");
+		Integer param2 = jsonObject.getInt("userId");
+		Integer param3 = jsonObject.getInt("rentalId");
+		Integer param4 = jsonObject.getInt("paymentMethodId");
+    	
+		if (param1 == null ||param2 == null) {
+			resp.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+			return;
+		}
+		if ( param3 == null || param4 == null) {
+			resp.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+			return;
+		}
+		
 		Payments item = new Payments();
 		long millis = System.currentTimeMillis();  
         Date date=new Date(millis);
@@ -110,15 +125,37 @@ public class PaymentsServlet extends HttpServlet {
         }
         
         item.setId(id);
-        item.setQuantity(p1);
-        item.setUserId(p2);
-        item.setRentalId(p3);
-        item.setPaymentMethodId(p4);
+        item.setQuantity(param1);
+        item.setUserId(param2);
+        item.setRentalId(param3);
+        item.setPaymentMethodId(param4);
 		item.setCreatedAt(date);
 		item.setUpdatedAt(date);
 		
+    	if (req.getRequestURL().toString().contains("create")) {
+    		Rentals rental = RentalsDAOImpl.getInstance().read(param3);
+    		if (rental == null) {
+    			resp.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+    			return;
+    		}
+    		rental.setRentalStateId(3);
+    		RentalsDAOImpl.getInstance().update(rental);
+    		Lockers locker = LockersDAOImpl.getInstance().read(rental.getLockerId());
+    		if (locker == null) {
+    			resp.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+    			return;
+    		}
+    		locker.setLockerStateId(4);
+    		LockersDAOImpl.getInstance().update(locker);
+    	}
+		
 		PaymentsDAOImpl.getInstance().create(item);
-			
+		ObjectMapper mapper = new ObjectMapper();
+		DateFormat df = new SimpleDateFormat("dd/MM/yyyy HH:mm:ss");
+		mapper.setDateFormat(df);
+		
+		String jsonString = mapper.writeValueAsString(item);
+		resp.getWriter().print(jsonString);
 		
 	}
 	
@@ -142,7 +179,8 @@ public class PaymentsServlet extends HttpServlet {
     		return;
 		}
 		PaymentsDAOImpl.getInstance().delete(item);
-		
+		resp.setContentType("application/json");
+		resp.getWriter().print("[]");
 	}
 	
 	protected void doPut(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
@@ -165,38 +203,55 @@ public class PaymentsServlet extends HttpServlet {
     		return;
 		}
 		
-		String param1 = req.getParameter("quantity");
-		String param2 = req.getParameter("userId");
-		String param3 = req.getParameter("rentalId");
-		String param4 = req.getParameter("paymentMethodId");
+		JSONObject jsonObject;
+		StringBuffer jb = new StringBuffer();
+		String line = null;
+		try {
+		    BufferedReader reader = req.getReader();
+		    while ((line = reader.readLine()) != null)
+		      jb.append(line);
+		  } catch (Exception e) { /*report an error*/ }
+
+		  try {
+		   jsonObject =  new JSONObject(jb.toString());
+		  } catch (JSONException e) {
+		    // crash and burn
+		    throw new IOException("Error parsing JSON request string");
+		  }
+		  
+		Double param1 = jsonObject.getDouble("quantity");
+		Integer param2 = jsonObject.getInt("userId");
+		Integer param3 = jsonObject.getInt("rentalId");
+		Integer param4 = jsonObject.getInt("paymentMethodId");
 		
 		
 		long millis = System.currentTimeMillis();
         Date date=new Date(millis);  
         
-        if(param1 != "" || param1 != null) {
-        	Double p1 = Double.parseDouble(param1);
-        	item.setQuantity(p1);
+        if(param1 != null) {
+        	item.setQuantity(param1);
         }
         
-        if(param2 != "" || param2 != null) {
-    		Integer p2 = Integer.parseInt(param2);
-        	item.setUserId(p2);
+        if(param2 != null) {
+        	item.setUserId(param2);
         }
         
-        if(param3 != "" || param3 != null) {
-    		Integer p3 = Integer.parseInt(param3);
-        	item.setRentalId(p3);
+        if(param3 != null) {
+        	item.setRentalId(param3);
         }
 
-        if(param4 != "" || param4 != null) {
-    		Integer p4 = Integer.parseInt(param4);
-        	item.setPaymentMethodId(p4);
+        if(param4 != null) {
+        	item.setPaymentMethodId(param4);
         }
         
 
 		item.setUpdatedAt(date);
 		PaymentsDAOImpl.getInstance().update(item);
-
+		ObjectMapper mapper = new ObjectMapper();
+		DateFormat df = new SimpleDateFormat("dd/MM/yyyy HH:mm:ss");
+		mapper.setDateFormat(df);
+		
+		String jsonString = mapper.writeValueAsString(item);
+		resp.getWriter().print(jsonString);
 	}
 }

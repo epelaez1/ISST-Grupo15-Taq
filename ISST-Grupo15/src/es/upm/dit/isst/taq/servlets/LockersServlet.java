@@ -1,7 +1,10 @@
 package es.upm.dit.isst.taq.servlets;
 
+import java.io.BufferedReader;
 import java.io.IOException;
 import java.sql.Date;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
 import java.util.List;
 
 import javax.servlet.ServletException;
@@ -10,6 +13,8 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import org.json.JSONException;
+import org.json.JSONObject;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 
@@ -18,7 +23,7 @@ import es.upm.dit.isst.taq.model.Lockers;
 /**
  * Servlet implementation class Form2Profesor
  */
-@WebServlet({"/api/v1/locker/*", "/api/v1/lockers"})
+@WebServlet({"/api/v1/admin/locker/*", "/api/v1/admin/lockers"})
 public class LockersServlet extends HttpServlet {
 	private static final long serialVersionUID = 1L;
        
@@ -41,7 +46,9 @@ public class LockersServlet extends HttpServlet {
     	resp.addHeader("Access-Control-Allow-Origin", "http://localhost:8080");
     	resp.setContentType("application/json");
     	ObjectMapper mapper = new ObjectMapper();
-    	
+		DateFormat df = new SimpleDateFormat("dd/MM/yyyy HH:mm:ss");
+		mapper.setDateFormat(df);
+		
     	if(req.getRequestURI().contains("lockers")) {
     		List<Lockers> list = LockersDAOImpl.getInstance().readAll();
     		if (list.isEmpty()) {
@@ -73,17 +80,28 @@ public class LockersServlet extends HttpServlet {
 	 */
 	protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
 		
-		String lockerNumber = req.getParameter("lockerNumber");
-		String lockerStateId = req.getParameter("lockerStateId");
-		String locationId = req.getParameter("locationId");
-		String param = req.getPathInfo();
+		JSONObject jsonObject;
+		StringBuffer jb = new StringBuffer();
+		String line = null;
+		try {
+		    BufferedReader reader = req.getReader();
+		    while ((line = reader.readLine()) != null)
+		      jb.append(line);
+		  } catch (Exception e) { /*report an error*/ }
+
+		  try {
+		   jsonObject =  new JSONObject(jb.toString());
+		  } catch (JSONException e) {
+		    // crash and burn
+		    throw new IOException("Error parsing JSON request string");
+		  }
+		  
+		Integer lockerNumber = jsonObject.getInt("lockerNumber");
+		Integer lockerStateId = jsonObject.getInt("lockerStateId");
+		Integer locationId = jsonObject.getInt("locationId");
+
     	
-    	if (param != null) {
-    		resp.setStatus(HttpServletResponse.SC_NOT_FOUND);
-    		return;
-    	}
-    	
-		if (lockerNumber == "" || lockerNumber == null || lockerStateId == "" || lockerStateId == null) {
+		if (lockerNumber == null || lockerStateId == null) {
 			resp.setStatus(HttpServletResponse.SC_BAD_REQUEST);
 			return;
 		}
@@ -99,13 +117,17 @@ public class LockersServlet extends HttpServlet {
         }
         
         item.setId(id);
-		item.setLockerNumber(Integer.parseInt(lockerNumber));
-		item.setLockerStateId(Integer.parseInt(lockerStateId));
-		item.setLocationId(Integer.parseInt(locationId));
+		item.setLockerNumber(lockerNumber);
+		item.setLockerStateId(lockerStateId);
+		item.setLocationId(locationId);
 		item.setCreatedAt(date);
 		item.setUpdatedAt(date);
 		LockersDAOImpl.getInstance().create(item);
-			
+		ObjectMapper mapper = new ObjectMapper();
+		DateFormat df = new SimpleDateFormat("dd/MM/yyyy HH:mm:ss");
+		mapper.setDateFormat(df);
+		String jsonString = mapper.writeValueAsString(item);
+		resp.getWriter().print(jsonString);
 		
 	}
 	
@@ -129,7 +151,8 @@ public class LockersServlet extends HttpServlet {
     		return;
 		}
 		LockersDAOImpl.getInstance().delete(item);
-		
+		resp.setContentType("application/json");
+		resp.getWriter().print("[]");
 	}
 	
 	protected void doPut(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
@@ -138,10 +161,21 @@ public class LockersServlet extends HttpServlet {
 		Lockers item = null;
 		String param = req.getPathInfo();
     	
-    	if (param == null) {
-    		resp.setStatus(HttpServletResponse.SC_NOT_FOUND);
-    		return;
-    	}
+		JSONObject jsonObject;
+		StringBuffer jb = new StringBuffer();
+		String line = null;
+		try {
+		    BufferedReader reader = req.getReader();
+		    while ((line = reader.readLine()) != null)
+		      jb.append(line);
+		  } catch (Exception e) { /*report an error*/ }
+
+		  try {
+		   jsonObject =  new JSONObject(jb.toString());
+		  } catch (JSONException e) {
+		    // crash and burn
+		    throw new IOException("Error parsing JSON request string");
+		  }
     	
 		id = Integer.parseInt(param.substring(1));
 		
@@ -152,25 +186,29 @@ public class LockersServlet extends HttpServlet {
     		return;
 		}
 		
-		String lockerNumber = req.getParameter("lockerNumber");
-		String lockerStateId = req.getParameter("lockerStateId");
-		String locationId = req.getParameter("locationId");
+		Integer lockerNumber = jsonObject.getInt("lockerNumber");
+		Integer lockerStateId = jsonObject.getInt("lockerStateId");
+		Integer locationId = jsonObject.getInt("locationId");
 		
 		
 		long millis = System.currentTimeMillis();  
         Date date=new Date(millis);  
         
-        if(lockerNumber != "" || lockerNumber != null)
-        	item.setLockerNumber(Integer.parseInt(lockerNumber));
+        if(lockerNumber != null)
+        	item.setLockerNumber(lockerNumber);
         
-        if(lockerStateId != "" || lockerStateId != null)
-        	item.setLockerStateId(Integer.parseInt(lockerStateId));
+        if(lockerStateId != null)
+        	item.setLockerStateId(lockerStateId);
         
-        if(lockerStateId != "" || lockerStateId != null)
-        	item.setLocationId(Integer.parseInt(locationId));
+        if(locationId != null)
+        	item.setLocationId(locationId);
         
 		item.setUpdatedAt(date);
 		LockersDAOImpl.getInstance().update(item);
-
+		ObjectMapper mapper = new ObjectMapper();
+		DateFormat df = new SimpleDateFormat("dd/MM/yyyy HH:mm:ss");
+		mapper.setDateFormat(df);
+		String jsonString = mapper.writeValueAsString(item);
+		resp.getWriter().print(jsonString);
 	}
 }

@@ -1,7 +1,10 @@
 package es.upm.dit.isst.taq.servlets;
 
+import java.io.BufferedReader;
 import java.io.IOException;
 import java.sql.Date;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
 import java.util.List;
 
 import javax.servlet.ServletException;
@@ -10,6 +13,9 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import org.json.JSONException;
+import org.json.JSONObject;
+
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import es.upm.dit.isst.taq.dao.UsersDAOImpl;
@@ -17,7 +23,7 @@ import es.upm.dit.isst.taq.model.Users;
 /**
  * Servlet implementation class Form2Profesor
  */
-@WebServlet({"/api/v1/user/*", "/api/v1/users"})
+@WebServlet({"/api/v1/admin/user/*", "/api/v1/admin/users", "/api/v1/app/session"})
 public class UsersServlet extends HttpServlet {
 	private static final long serialVersionUID = 1L;
        
@@ -40,8 +46,10 @@ public class UsersServlet extends HttpServlet {
     	resp.addHeader("Access-Control-Allow-Origin", "http://localhost:8080");
     	resp.setContentType("application/json");
     	ObjectMapper mapper = new ObjectMapper();
-    	
-    	if(req.getRequestURI().contains("users")) {
+		DateFormat df = new SimpleDateFormat("dd/MM/yyyy HH:mm:ss");
+		mapper.setDateFormat(df);
+		
+    	if(req.getRequestURL().toString().contains("users")) {
     		List<Users> list = UsersDAOImpl.getInstance().readAll();
     		if (list.isEmpty()) {
     			resp.getWriter().print("[]");
@@ -49,6 +57,13 @@ public class UsersServlet extends HttpServlet {
     		}
     		
     		String jsonString = mapper.writeValueAsString(list);
+    		resp.getWriter().print(jsonString);
+    		return;
+    	}
+    	
+    	if(req.getRequestURI().contains("session")) {
+    		Users usuario = UsersDAOImpl.getInstance().read(1);
+    		String jsonString = mapper.writeValueAsString(usuario);
     		resp.getWriter().print(jsonString);
     		return;
     	}
@@ -73,12 +88,30 @@ public class UsersServlet extends HttpServlet {
 	protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
 		
 		ObjectMapper mapper = new ObjectMapper();
+		DateFormat df = new SimpleDateFormat("dd/MM/yyyy HH:mm:ss");
+		mapper.setDateFormat(df);
 		
-		String param1 = req.getParameter("name");
-		String param2 = req.getParameter("phone");
-		String param3 = req.getParameter("dni");
-		String param4 = req.getParameter("email");
-		String param5 = req.getParameter("isAdmin");
+		JSONObject jsonObject;
+		StringBuffer jb = new StringBuffer();
+		String line = null;
+		try {
+		    BufferedReader reader = req.getReader();
+		    while ((line = reader.readLine()) != null)
+		      jb.append(line);
+		  } catch (Exception e) { /*report an error*/ }
+
+		  try {
+		   jsonObject =  new JSONObject(jb.toString());
+		  } catch (JSONException e) {
+		    // crash and burn
+		    throw new IOException("Error parsing JSON request string");
+		  }
+		  
+			String param1 = jsonObject.getString("name");
+			String param2 = jsonObject.getString("phone");
+			String param3 = jsonObject.getString("dni");
+			String param4 = jsonObject.getString("email");
+			Boolean param5 = jsonObject.getBoolean("isAdmin");
 		
 		String param = req.getPathInfo();
     	
@@ -87,16 +120,10 @@ public class UsersServlet extends HttpServlet {
     		return;
     	}
     	
-		if (param1 == "" || param1 == null || param2 == "" || param2 == null || param3 == "" || param3 == null) {
+		if (param1 == null ||param2 == null ||param3 == null || param4 == null ||param5 == null) {
 			resp.setStatus(HttpServletResponse.SC_BAD_REQUEST);
 			return;
 		}
-		if (param4 == "" || param4 == null || param5 == "" || param5 == null) {
-			resp.setStatus(HttpServletResponse.SC_BAD_REQUEST);
-			return;
-		}
-		
-		Boolean p5 = Boolean.parseBoolean(param5);
 		
 		Users item = new Users();
 		long millis = System.currentTimeMillis();  
@@ -113,7 +140,7 @@ public class UsersServlet extends HttpServlet {
         item.setPhone(param2);
         item.setDni(param3);
         item.setEmail(param4);
-        item.setAdmin(p5);
+        item.setAdmin(param5);
 		item.setCreatedAt(date);
 		item.setUpdatedAt(date);
 		
@@ -143,7 +170,8 @@ public class UsersServlet extends HttpServlet {
     		return;
 		}
 		UsersDAOImpl.getInstance().delete(item);
-		
+		resp.setContentType("application/json");
+		resp.getWriter().print("[]");
 	}
 	
 	protected void doPut(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
@@ -166,40 +194,57 @@ public class UsersServlet extends HttpServlet {
     		return;
 		}
 		
-		String param1 = req.getParameter("name");
-		String param2 = req.getParameter("phone");
-		String param3 = req.getParameter("dni");
-		String param4 = req.getParameter("email");
-		String param5 = req.getParameter("isAdmin");
+		JSONObject jsonObject;
+		StringBuffer jb = new StringBuffer();
+		String line = null;
+		try {
+		    BufferedReader reader = req.getReader();
+		    while ((line = reader.readLine()) != null)
+		      jb.append(line);
+		  } catch (Exception e) { /*report an error*/ }
+
+		  try {
+		   jsonObject =  new JSONObject(jb.toString());
+		  } catch (JSONException e) {
+		    // crash and burn
+		    throw new IOException("Error parsing JSON request string");
+		  }
+		  
+		String param1 = jsonObject.getString("name");
+		String param2 = jsonObject.getString("phone");
+		String param3 = jsonObject.getString("dni");
+		String param4 = jsonObject.getString("email");
+		Boolean param5 = jsonObject.getBoolean("isAdmin");
 		
 		
 		long millis = System.currentTimeMillis();
         Date date=new Date(millis);  
         
-        if(param1 != "" || param1 != null) {
+        if(param1 != null) {
         	item.setName(param1);
         }
         
-        if(param2 != "" || param2 != null) {
+        if(param2 != null) {
         	item.setPhone(param2);
         }
         
-        if(param3 != "" || param3 != null) {
+        if(param3 != null) {
         	item.setDni(param3);
         }
 
-        if(param4 != "" || param4 != null) {
+        if(param4 != null) {
         	item.setEmail(param4);
         }
         
-        if(param5 != "" || param5 != null) {
-    		Boolean p5 = Boolean.parseBoolean(param5);
-        	item.setAdmin(p5);
+        if(param5 != null) {
+        	item.setAdmin(param5);
         }
         
 		item.setUpdatedAt(date);
 		UsersDAOImpl.getInstance().update(item);
 		ObjectMapper mapper = new ObjectMapper();
+		DateFormat df = new SimpleDateFormat("dd/MM/yyyy HH:mm:ss");
+		mapper.setDateFormat(df);
 		String jsonString = mapper.writeValueAsString(item);
 		resp.getWriter().print(jsonString);
 	}

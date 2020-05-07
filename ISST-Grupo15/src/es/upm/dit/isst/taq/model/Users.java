@@ -5,6 +5,8 @@ import java.sql.Date;
 import javax.persistence.Entity;
 import javax.persistence.Id;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
+
 @Entity
 public class Users {
 	
@@ -55,7 +57,7 @@ public class Users {
 	public void setEmail(String email) {
 		this.email = email;
 	}
-
+	@JsonProperty(value="isAdmin")
 	public boolean isAdmin() {
 		return isAdmin;
 	}
