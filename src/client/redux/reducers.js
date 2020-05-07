@@ -11,8 +11,12 @@ function pong(state = false, action = {}) {
 
 function loggedUser(state = {}, action = {}) {
 	switch (action.type) {
+	case 'UPDATE_USER':
+		return state.id === action.payload.user.id ? action.payload.user : state;
 	case 'MAKE_ADMIN':
 		return { ...state, isAdmin: !state.isAdmin };
+	case 'SET_SESSION':
+		return action.payload.session;
 	default:
 		return state;
 	}
@@ -36,6 +40,15 @@ function lockers(state = [], action = {}) {
 
 function users(state = [], action = {}) {
 	switch (action.type) {
+	case 'UPDATE_USER':
+		return state.map((user) => (
+			user.id === action.payload.user.id ? action.payload.user : user));
+	case 'SET_USER':
+		return [...state, action.payload.user];
+	case 'SET_USERS':
+		return action.payload.users;
+	case 'REMOVE_USER':
+		return state.filter((user) => user.id !== action.payload.user.id);
 	default:
 		return state;
 	}
@@ -43,6 +56,15 @@ function users(state = [], action = {}) {
 
 function rentals(state = [], action = {}) {
 	switch (action.type) {
+	case 'UPDATE_RENTAL':
+		return state.map((rental) => (
+			rental.id === action.payload.rental.id ? action.payload.rental : rental));
+	case 'SET_RENTAL':
+		return [...state, action.payload.rental];
+	case 'SET_RENTALS':
+		return action.payload.rentals;
+	case 'REMOVE_RENTAL':
+		return state.filter((rental) => rental.id !== action.payload.rental.id);
 	default:
 		return state;
 	}
@@ -65,14 +87,17 @@ function locations(state = [], action = {}) {
 }
 
 function payments(state = [], action = {}) {
+	const { payload } = action;
 	switch (action.type) {
-	default:
-		return state;
-	}
-}
-
-function payment(state = [], action = {}) {
-	switch (action.type) {
+	case 'UPDATE_PAYMENT':
+		return state.map((payment) => (
+			payment.id === payload.payment.id ? payload.payment : payment));
+	case 'SET_PAYMENT':
+		return [...state, payload.payment];
+	case 'SET_PAYMENTS':
+		return payload.payments;
+	case 'REMOVE_PAYMENT':
+		return state.filter((payment) => payment.id !== payload.payment.id);
 	default:
 		return state;
 	}
@@ -117,7 +142,6 @@ const GlobalState = (combineReducers({
 	rentals,
 	locations,
 	payments,
-	payment,
 	lockerStates,
 	rentalStates,
 	paymentMethods,

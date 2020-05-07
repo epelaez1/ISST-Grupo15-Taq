@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import AppBar from '@material-ui/core/AppBar';
 import IconButton from '@material-ui/core/IconButton';
 import Toolbar from '@material-ui/core/Toolbar';
@@ -8,7 +8,8 @@ import FormGroup from '@material-ui/core/FormGroup';
 import FormControlLabel from '@material-ui/core/FormControlLabel';
 import Switch from '@material-ui/core/Switch';
 import { useSelector, useDispatch } from 'react-redux';
-import { makeAdmin } from '../redux/actions/users';
+import { makeAdmin } from '../redux/actions/session';
+import getSession from '../utils/api/session';
 
 function NavBar(props) {
 	const {
@@ -17,6 +18,9 @@ function NavBar(props) {
 	const loggedUser = useSelector((state) => state.loggedUser);
 	const auth = loggedUser.isAdmin;
 	const dispatch = useDispatch();
+	useEffect(() => {
+		getSession();
+	}, []);
 	const handleChange = () => {
 		dispatch(makeAdmin());
 	};

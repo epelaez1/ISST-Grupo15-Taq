@@ -3,6 +3,7 @@ h1 {
     color: #F65555;
 }
 html, body, #root {
+	font-family: 'Mukta Malar', sans-serif;
 	height: 100%;
 }
 

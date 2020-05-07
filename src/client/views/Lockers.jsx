@@ -11,6 +11,7 @@ import EditableTable from '../components/EditableTable';
 const Lockers = () => {
 	const [lockersScaffold, setLockersScaffold] = useState(scaffolds.lockers);
 	const locations = useSelector((state) => state.locations);
+	const data = useSelector((state) => state.lockers);
 
 	useEffect(() => {
 		getAllLockers();
@@ -27,12 +28,15 @@ const Lockers = () => {
 
 	return (
 		<EditableTable
-			model="lockers"
+			data={data}
 			columns={lockersScaffold.columns}
 			title={lockersScaffold.title}
 			create={createLocker}
 			update={updateLocker}
 			remove={removeLocker}
+			actions={[]}
+			editable
+			showEmpty
 		/>
 
 	);

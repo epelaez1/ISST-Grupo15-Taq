@@ -1,5 +1,4 @@
 export function setLocker(locker) {
-	console.log(locker);
 	return { type: 'SET_LOCKER', payload: { locker } };
 }
 export function setLockers(lockers) {

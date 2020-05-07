@@ -1,28 +1,53 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useSelector } from 'react-redux';
 import MaterialTable from 'material-table';
 
-export default function EditableTalbe(props) {
+const EditableTable = (props) => {
 	const {
-		model, title, columns,
-		create, update, remove,
+		data, title, columns, actions,
+		create, update, remove, editable,
+		showEmpty, detailPanel,
 	} = props;
-	const data = useSelector((state) => state[model]);
-
+	const [filterActivated, setFilterActivated] = useState(false);
+	let triggers = {};
+	if (editable) {
+		triggers = {
+			onRowAdd: (newData) => create(newData),
+			onRowUpdate: (newData, oldData) => update(newData, oldData),
+			onRowDelete: (oldData) => remove(oldData),
+		};
+	}
+	if (data.length === 0 && !showEmpty) {
+		return (
+			<div>
+				<hr />
+				<div style={{ textAlign: 'center', fontStyle: 'italic', fontWeight: 'bold' }}> No hay {title.toLowerCase()} </div>
+				<hr />
+			</div>
+		);
+	}
 	return (
 		<MaterialTable
 			title={title}
 			columns={columns}
 			data={data}
-			editable={{
-				onRowAdd: (newData) => create(newData),
-				onRowUpdate: (newData, oldData) => update(newData, oldData),
-				onRowDelete: (oldData) => remove(oldData),
-			}}
+			editable={triggers}
 			options={{
-				filtering: true,
+				filtering: filterActivated,
 				selection: true,
 			}}
+			detailPanel={detailPanel}
+			actions={[
+				...actions,
+				{
+					icon: 'filter_list',
+					tooltip: 'Filtrar datos',
+					onClick: () => setFilterActivated(!filterActivated),
+					position: 'toolbar',
+				},
+			]}
 		/>
 	);
-}
+};
+
+export default EditableTable;

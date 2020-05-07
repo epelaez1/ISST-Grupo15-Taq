@@ -42,14 +42,14 @@ function LeftMenu(props) {
 		},
 		{
 			id: 2,
-			name: 'Historial',
-			link: '/user/history',
-			icon: <HistoryIcon style={{ color: grey[900] }} />,
+			name: 'Solicitar taquilla',
+			link: '/request',
+			icon: <ViewWeekTwoToneIcon style={{ color: brown[700] }} />,
 		},
 		{
 			id: 3,
 			name: 'Mis Datos',
-			link: '/user',
+			link: '/me',
 			icon: <AccountCircleIcon style={{ color: blue[700] }} />,
 		},
 	];
